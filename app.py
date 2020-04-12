@@ -1,9 +1,10 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy 
-from flask_marshmallow import Marshmallow 
+from flask_marshmallow import Marshmallow
 import os
 import logging
 import json
+
 
 # Init app
 app = Flask(__name__)
@@ -16,17 +17,18 @@ db = SQLAlchemy(app)
 # Init ma
 ma = Marshmallow(app)
 
-# Product Class/Model
+# users Class/Model
 class users(db.Model):
   id = db.Column(db.Integer, primary_key=True)
   name = db.Column(db.String(100), unique=True)
-  mail = db.Column(db.String(200))
-  Number = db.Colum(db.Integer)
+  mail = db.Column(db.String(100), unique=True, nullable=True)
+  Number = db.Column(db.String(12), unique=True, nullable=True)
 
-  def __init__(id, name, mail, Numer):
+  def __init__(self, id, name, mail, Number):
+    self.id = id      
     self.name = name
     self.mail = mail
-    self.Number = Numer
+    self.Number = Number
 
 # Product Schema
 class usersSchema(ma.Schema):
@@ -37,7 +39,7 @@ class usersSchema(ma.Schema):
 users_schema = usersSchema()
 users_schema = usersSchema(many=True)
 
-# Create a Product
+# Create a users
 @app.route('/users', methods=['POST'])
 def add_product():
   app.logger.info("Request body" + request.json["name"])
@@ -46,7 +48,7 @@ def add_product():
   Number = request.json['Number']
   
 
-  new_users = users(name, mail, Number)
+  new_users = users(id, name, mail, Number)
 
   db.session.add(new_users)
   db.session.commit()
@@ -58,7 +60,7 @@ def add_product():
 def get_products():
   all_products = users.query.all()
   result = users_schema.dump(all_products)
-  return jsonify(result)
+  return jsonify(result) 
 
 # Get Single Products
 @app.route('/users/<id>', methods=['GET'])
@@ -67,8 +69,8 @@ def get_product(id):
   return users_schema.jsonify(product)
 
 # Update a Product
-@app.route('/product/<id>', methods=['PUT'])
-def update_product(id):
+@app.route('/users/<id>', methods=['PUT'])
+def update_users(id):
   product = users.query.get(id)
 
   name = request.json['name']
@@ -83,16 +85,16 @@ def update_product(id):
 
   db.session.commit()
 
-  return users_schema.jsonify(product)
+  return users_schema.jsonify(users)
 
 # Delete Product
 @app.route('/users/<id>', methods=['DELETE'])
-def delete_product(id):
+def delete_users(id):
   product = users.query.get(id)
-  db.session.delete(product)
+  db.session.delete(users)
   db.session.commit()
 
-  return users_schema.jsonify(product)
+  return users_schema.jsonify(users)
 
 # Run Server
 if __name__ == '__main__':
